@@ -68,5 +68,6 @@ library
   -- Base language which the package is written in.
   default-language:    Haskell2010
 
-  c-sources:           src/main/Language/Objc/Foundation/NSObject_objc.m
+  c-sources:           src/main/Language/ObjC/Foundation_objc.m,
+                       src/main/Language/ObjC/Foundation/NSObject_objc.m
   

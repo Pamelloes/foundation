@@ -4,31 +4,32 @@
 -- License     :  MIT
 -- Maintainer  :  joshuabrot@gmail.com
 
-{-# LANGUAGE TemplateHaskell, QuasiQuotes, DeriveDataTypeable #-}
+{-# LANGUAGE TemplateHaskell, QuasiQuotes #-}
 
 module Language.ObjC.Foundation.NSObject (
     NSObject,
-    version
+    impl_nsobject
   ) where
-
-import Data.Typeable
 
 import Language.C.Quote.ObjC
 import Language.C.Inline.ObjC
 import Language.Haskell.TH
 
-objc_import ["<Foundation/Foundation.h>"]
+objc_import ["HsFFI.h"
+            ,"<Foundation/Foundation.h>"
+            ]
 
-newtype NSZone = NSZone (ForeignPtr NSZone)
+class NSObject a where
+  retain :: a -> IO ()
+  release :: a -> IO ()
+  autorelease :: a -> IO ()
 
-class NSCopying a where
-  copyWithZone :: NSZone -> IO a
-
-newtype NSObject a = NSObject (ForeignPtr (NSObject a))
-objc_typecheck
-
-version :: IO Int
-version = $(objc [] $ ''Int <: [cexp| [NSObject version] |])
+impl_nsobject :: Name -> Q [Dec]
+impl_nsobject c = [d| instance NSObject $(return$ConT c) where
+                        retain a = $(objc ['a :> c] $ void [cexp| [((id)a) retain] |])
+                        release a = $(objc ['a :> c] $ void [cexp| [((id)a) release] |])
+                        autorelease a = $(objc ['a :> c] $ void [cexp| [((id)a) autorelease] |])
+                  |]
 
 objc_emit
 
